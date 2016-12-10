@@ -7,7 +7,7 @@
         <dict>
             <key>IKEv2</key>
             <dict>
-{% if (OnDemandEnabled_WIFI is defined and OnDemandEnabled_WIFI == 'Y') or (OnDemandEnabled_Cellular is defined and OnDemandEnabled_Cellular == 'Y') %}
+{% if (OnDemandEnabled_WIFI is defined and OnDemandEnabled_WIFI == 'Y') or (OnDemandEnabled_Cellular is defined and OnDemandEnabled_Cellular == 'Y') or (OnDemandEnabled_Ethernet is defined and OnDemandEnabled_Ethernet == 'Y') %}
               <key>OnDemandEnabled</key>
                 <integer>1</integer>
               <key>OnDemandRules</key>
@@ -47,6 +47,16 @@
 {% endif %}
                     <key>InterfaceTypeMatch</key>
                       <string>Cellular</string>
+                  </dict>
+                  <dict>
+                    <key>Action</key>
+{% if OnDemandEnabled_Ethernet is defined and OnDemandEnabled_Ethernet == 'Y' %}
+                      <string>Connect</string>
+  {% else %}
+                      <string>Disconnect</string>
+{% endif %}
+                    <key>InterfaceTypeMatch</key>
+                      <string>Ethernet</string>
                   </dict>
                 </array>
 {% else %}

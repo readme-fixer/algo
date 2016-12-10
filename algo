@@ -56,6 +56,12 @@ OnDemandEnabled_Cellular=${OnDemandEnabled_Cellular:-n}
 if [[ "$OnDemandEnabled_Cellular" =~ ^(y|Y)$ ]]; then EXTRA_VARS+=" OnDemandEnabled_Cellular=Y"; fi
 
 read -p "
+Do you want to enable VPN always when connected to the ethernet network?
+[y/N]: " -r OnDemandEnabled_Ethernet
+OnDemandEnabled_Ethernet=${OnDemandEnabled_Ethernet:-n}
+if [[ "$OnDemandEnabled_Ethernet" =~ ^(y|Y)$ ]]; then EXTRA_VARS+=" OnDemandEnabled_Ethernet=Y"; fi
+
+read -p "
 Do you want to enable VPN for Windows 10 clients? (Will use insecure algorithms and ciphers)
 [y/N]: " -r Win10_Enabled
 Win10_Enabled=${Win10_Enabled:-n}
