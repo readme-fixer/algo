@@ -151,6 +151,14 @@
   environment:
     subjectAltName: "DNS:{{ IP_subject_alt_name }},IP:{{ IP_subject_alt_name }}"
 
+- name: Copy the CA certificate
+  local_action:
+    module: copy
+    src: "configs/{{ IP_subject_alt_name }}/pki/cacert.pem"
+    dest: "configs/{{ IP_subject_alt_name }}/cacert.pem"
+    mode: 0600
+  become: no
+
 - name: Generate the serial number
   local_action: >
     shell echo 01 > serial &&
