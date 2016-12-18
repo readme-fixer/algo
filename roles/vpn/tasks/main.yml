@@ -9,6 +9,12 @@
 - set_fact:
     easyrsa_p12_export_password: "{{ (ansible_date_time.iso8601_basic|sha1|to_uuid).split('-')[0] }}"
     easyrsa_CA_password: "{{ CA_password.stdout }}"
+    IP_subject_alt_name: "{{ IP_subject_alt_name }}"
+
+- name: Change the algorithm to RSA
+  set_fact:
+    algo_params: "rsa:2048"
+  when: Win10_Enabled is defined and Win10_Enabled == "Y"
 
 - name: Install StrongSwan
   apt: name=strongswan state=latest update_cache=yes
@@ -133,16 +139,14 @@
 - name: Generate the openssl server configs
   local_action:
     module: template
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
+    src: openssl.cnf.j2
+    dest: "configs/{{ IP_subject_alt_name }}/pki/openssl.cnf"
   become: no
-  with_items:
-    - { src: openssl.cnf.j2, dest: "configs/{{ IP_subject_alt_name }}/pki/openssl.cnf" }
 
 - name: Build the CA pair
   local_action: >
     shell openssl ecparam -name prime256v1 -out ecparams/prime256v1.pem &&
-      openssl req -utf8 -new -newkey ec:ecparams/prime256v1.pem -config openssl.cnf -keyout private/cakey.pem -out cacert.pem -x509 -days 3650 -batch -passout pass:"{{ easyrsa_CA_password }}" &&
+      openssl req -utf8 -new -newkey {{ algo_params | default('ec:ecparams/prime256v1.pem') }} -config openssl.cnf -keyout private/cakey.pem -out cacert.pem -x509 -days 3650 -batch -passout pass:"{{ easyrsa_CA_password }}" &&
       touch {{ IP_subject_alt_name }}_ca_generated
   become: no
   args:
@@ -170,7 +174,7 @@
 
 - name: Build the server pair
   local_action: >
-    shell openssl req -utf8 -new -newkey ec:ecparams/prime256v1.pem -config openssl.cnf -keyout private/{{ IP_subject_alt_name }}.key -out reqs/{{ IP_subject_alt_name }}.req -nodes -passin pass:"{{ easyrsa_CA_password }}" -subj "/CN={{ IP_subject_alt_name }}" -batch &&
+    shell openssl req -utf8 -new -newkey {{ algo_params | default('ec:ecparams/prime256v1.pem') }} -config openssl.cnf -keyout private/{{ IP_subject_alt_name }}.key -out reqs/{{ IP_subject_alt_name }}.req -nodes -passin pass:"{{ easyrsa_CA_password }}" -subj "/CN={{ IP_subject_alt_name }}" -batch &&
     openssl ca -utf8 -in reqs/{{ IP_subject_alt_name }}.req -out certs/{{ IP_subject_alt_name }}.crt -config openssl.cnf -days 3650 -batch -passin pass:"{{ easyrsa_CA_password }}" -subj "/CN={{ IP_subject_alt_name }}" &&
     touch certs/{{ IP_subject_alt_name }}_crt_generated
   become: no
@@ -182,7 +186,7 @@
 
 - name: Build the client's pair
   local_action: >
-   shell openssl req -utf8 -new -newkey ec:ecparams/prime256v1.pem -config openssl.cnf -keyout private/{{ item }}.key -out reqs/{{ item }}.req -nodes -passin pass:"{{ easyrsa_CA_password }}" -subj "/CN={{ item }}" -batch &&
+   shell openssl req -utf8 -new -newkey {{ algo_params | default('ec:ecparams/prime256v1.pem') }} -config openssl.cnf -keyout private/{{ item }}.key -out reqs/{{ item }}.req -nodes -passin pass:"{{ easyrsa_CA_password }}" -subj "/CN={{ item }}" -batch &&
       openssl ca -utf8 -in reqs/{{ item }}.req -out certs/{{ item }}.crt -config openssl.cnf -days 3650 -batch -passin pass:"{{ easyrsa_CA_password }}" -subj "/CN={{ item }}" &&
       touch certs/{{ item }}_crt_generated
   become: no
