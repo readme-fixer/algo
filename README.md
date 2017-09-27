@@ -157,7 +157,7 @@ On macOS, did you try to install pycrypto and encounter the following error?
 ```
 build/temp.macosx-10.12-intel-2.7/_openssl.c:434:10: fatal error: 'openssl/opensslv.h' file not found
 
-#include <openssl/opensslv.h>
+# include <openssl/opensslv.h>
 
         ^
 
